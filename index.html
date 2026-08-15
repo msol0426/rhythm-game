@@ -25,12 +25,11 @@
       font-family: 'Pretendard', sans-serif;
     }
 
-    /* 16:9 메인 컨테이너 */
+    /* 기기 맞춤형 메인 컨테이너 (모바일 툴바 대응 dvh 적용) */
     #game-container {
       width: 100vw;
-      height: calc(100vw * 9 / 16);
-      max-height: 100vh;
-      max-width: calc(100vh * 16 / 9);
+      height: 100vh;
+      height: 100dvh;
       background-color: #d1eff0;
       position: relative;
       overflow: hidden;
@@ -182,9 +181,99 @@
       top: 0px;
       pointer-events: none;
     }
+
+    /* 세로 모드 경고 오버레이 */
+    #orientation-warning {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background-color: #111111;
+      color: #ffffff;
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .warning-content {
+      animation: pulse 1.5s infinite ease-in-out;
+      padding: 20px;
+    }
+
+    .phone-icon {
+      font-size: 10vh;
+      margin-bottom: 20px;
+    }
+
+    #orientation-warning p {
+      font-size: 4vh;
+      font-weight: bold;
+      line-height: 1.4;
+    }
+    #orientation-warning .sub-warning {
+      font-size: 2.5vh;
+      color: #aaaaaa;
+      margin-top: 10px;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* 태블릿/모바일 (화면이 좁거나 세로 모드) 최적화 반응형 스타일 */
+    @media (max-width: 1024px) {
+      .game-lane-container {
+        width: 80vw !important; /* 레인 너비를 넓혀 터치 편의성 극대화 */
+      }
+      .main-title {
+        font-size: 7vw !important;
+      }
+      .sub-title {
+        font-size: 3vw !important;
+      }
+      .song-btn {
+        font-size: 2.5vw !important;
+        padding: 2vw 1vw !important;
+      }
+      .game-title-text {
+        font-size: 3.5vw !important;
+      }
+      .score-board {
+        font-size: 3vw !important;
+      }
+      .key-block {
+        bottom: 6vh !important;  /* 하단 툴바 및 홈바 영역 위로 띄워 노출 보장 */
+        bottom: 6dvh !important;
+        height: 10vh !important; /* 모바일 기기 터치 영역 최적화 */
+        height: 10dvh !important;
+        font-size: 4vh !important;
+        border-radius: 8px !important;
+      }
+      .note {
+        height: 2.5vh !important;
+      }
+    }
+
+    /* 모바일 세로 모드 감지 시 가로 전환 경고 표시 */
+    @media (orientation: portrait) and (max-width: 1024px) {
+      #orientation-warning {
+        display: flex;
+      }
+    }
   </style>
 </head>
 <body>
+
+  <!-- 세로 모드 감지 안내창 -->
+  <div id="orientation-warning">
+    <div class="warning-content">
+      <div class="phone-icon">📱🔄</div>
+      <p>기기를 가로로 돌려주세요!</p>
+      <p class="sub-warning">Please rotate your device to landscape.</p>
+    </div>
+  </div>
 
   <div id="game-container">
     <div id="select-screen">
