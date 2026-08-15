@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>루미너스 리듬 게임</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      background-color: #111111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      font-family: 'Pretendard', sans-serif;
+    }
+
+    /* 16:9 메인 컨테이너 */
+    #game-container {
+      width: 100vw;
+      height: calc(100vw * 9 / 16);
+      max-height: 100vh;
+      max-width: calc(100vh * 16 / 9);
+      background-color: #d1eff0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 1. 곡 선택 화면 */
+    #select-screen {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .title-group {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .main-title {
+      font-size: 3.5vw;
+      font-weight: 800;
+      color: #2f4242;
+      margin-bottom: 0.5rem;
+    }
+
+    .sub-title {
+      font-size: 1.5vw;
+      font-weight: 800;
+      color: #2f4242;
+      margin-bottom: 0.5rem;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1vw;
+      width: 85%;
+      justify-content: center;
+    }
+
+    .song-btn {
+      flex: 1;
+      padding: 1.2vw 0.5vw;
+      background-color: #2f4242;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1vw;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* 2. 게임 플레이 화면 */
+    #play-screen {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      display: none;
+      transition: background-color 0.2s;
+    }
+
+    /* 카운트다운 레이어 */
+    #countdown-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 8vw;
+      font-weight: bold;
+      z-index: 10;
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* 상단 헤더 영역 */
+    .game-header {
+      position: absolute;
+      top: 2vw;
+      left: 3vw;
+      right: 3vw;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 5;
+      font-weight: 800;
+    }
+
+    .game-title-text {
+      font-size: 2vw;
+    }
+
+    .score-board {
+      font-size: 1.8vw;
+    }
+
+    /* 레인 영역 */
+    .game-lane-container {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40vw;
+      height: 100%;
+      display: flex;
+      justify-content: space-between;
+      border-left: 2px solid rgba(0, 0, 0, 0.1);
+      border-right: 2px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .lane {
+      flex: 1;
+      position: relative;
+      border-right: 1px dashed rgba(0, 0, 0, 0.1);
+    }
+    .lane:last-child {
+      border-right: none;
+    }
+
+    /* 하단 키 블럭 */
+    .key-block {
+      position: absolute;
+      bottom: 2vw;
+      left: 10%;
+      width: 80%;
+      height: 6vw;
+      background-color: #ffffff;
+      border: 3px solid;
+      border-radius: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2.5vw;
+      font-weight: 800;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.05s, transform 0.05s, color 0.05s;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    /* 노트 스타일 */
+    .note {
+      position: absolute;
+      left: 10%;
+      width: 80%;
+      height: 1.5vw;
+      border-radius: 4px;
+      top: 0px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <div id="select-screen">
+      <div class="title-group">
+        <h1 class="main-title">루미너스 리듬 게임</h1>
+        <p class="sub-title">LUMINOUS Rhythm Game</p>
+      </div>
+      <div class="button-group">
+        <button class="song-btn" onclick="selectAndStartGame('꿈루')">꿈루</button>
+        <button class="song-btn" onclick="selectAndStartGame('RUN')">RUN</button>
+      </div>
+    </div>
+
+    <div id="play-screen">
+      <div class="game-header">
+        <div class="game-title-text" id="game-title">RUN</div>
+        <div class="score-board">
+          SCORE: <span id="score">0</span> / <span id="max-score">0</span>
+        </div>
+      </div>
+
+      <div id="countdown-overlay">3</div>
+
+      <div class="game-lane-container">
+        <div class="lane" id="lane-0"><div class="key-block" id="block-0" data-lane="0">Q</div></div>
+        <div class="lane" id="lane-1"><div class="key-block" id="block-1" data-lane="1">W</div></div>
+        <div class="lane" id="lane-2"><div class="key-block" id="block-2" data-lane="2">E</div></div>
+        <div class="lane" id="lane-3"><div class="key-block" id="block-3" data-lane="3">R</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 🎵 곡 통합 데이터 구조 (동등한 상태로 관리)
+    const SONGS = {
+      꿈루: {
+        title: "꿈루",
+        audioUrl: "audio/꿈루.mp3", // 실제 음원 경로에 맞게 지정하세요
+        chartUrl: "꿈루.json",
+        bgColor: "#e0f9ff",
+        pointColor: "#3e565c",
+        audioBuffer: null,
+        noteData: []
+      },
+
+      RUN: {
+        title: "RUN",
+        audioUrl: "audio/RUN.mp3",
+        chartUrl: "run.json",
+        bgColor: "#d5eaf5",
+        pointColor: "#2a7298",
+        audioBuffer: null,
+        noteData: []
+      }
+    };
+
+    const KEY_MAP = { 'q': 0, 'w': 1, 'e': 2, 'r': 3, 'Q': 0, 'W': 1, 'E': 2, 'R': 3 };
+
+    let currentSongKey = null;
+    let currentScore = 0;
+    let totalScore = 0;
+    let gameStartTime = 0;
+    let isPlaying = false;
+    let activeNotes = [];
+
+    let audioCtx = null;
+    let currentSource = null;
+
+    // 모든 곡 데이터 로드 함수
+    async function initGameData() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      for (const key in SONGS) {
+        const song = SONGS[key];
+        
+        // 음원 로드
+        try {
+          const res = await fetch(song.audioUrl);
+          const arrayBuffer = await res.arrayBuffer();
+          song.audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+          console.log(`[${song.title}] 음원 로드 완료`);
+        } catch (e) {
+          console.error(`[${song.title}] 음원 로드 실패:`, e);
+        }
+
+        // 채보 로드
+        try {
+          const res = await fetch(song.chartUrl);
+          song.noteData = await res.json();
+          console.log(`[${song.title}] 채보 로드 완료`);
+        } catch (e) {
+          console.error(`[${song.title}] 채보 로드 실패:`, e);
+        }
+      }
+    }
+
+    // 초기화 실행
+    initGameData();
+    document.addEventListener('DOMContentLoaded', setupInputEvents);
+
+    // 공통 게임 선택 & 시작
+    async function selectAndStartGame(songKey) {
+      if (!SONGS[songKey]) return;
+      currentSongKey = songKey;
+      const song = SONGS[songKey];
+
+      if (audioCtx && audioCtx.state === 'suspended') {
+        await audioCtx.resume();
+      }
+
+      applyTheme(song);
+
+      document.getElementById('select-screen').style.display = 'none';
+      document.getElementById('play-screen').style.display = 'block';
+
+      let count = 3;
+      const overlay = document.getElementById('countdown-overlay');
+      overlay.style.display = 'flex';
+      overlay.innerText = count;
+
+      const countdownTimer = setInterval(() => {
+        count--;
+        if (count > 0) {
+          overlay.innerText = count;
+        } else {
+          clearInterval(countdownTimer);
+          overlay.style.display = 'none';
+          startGame();
+        }
+      }, 1000);
+    }
+
+    // 테마 색상 및 UI 동적 변경
+    function applyTheme(song) {
+      document.getElementById('game-title').innerText = song.title;
+      
+      const playScreen = document.getElementById('play-screen');
+      playScreen.style.backgroundColor = song.bgColor;
+
+      const header = document.querySelector('.game-header');
+      const overlay = document.getElementById('countdown-overlay');
+      header.style.color = song.pointColor;
+      overlay.style.color = song.pointColor;
+
+      const blocks = document.querySelectorAll('.key-block');
+      blocks.forEach(block => {
+        block.style.color = song.pointColor;
+        block.style.borderColor = song.pointColor;
+      });
+    }
+
+    // 게임 루프 실행
+    function startGame() {
+      const song = SONGS[currentSongKey];
+      isPlaying = true;
+      currentScore = 0;
+      totalScore = song.noteData.length;
+
+      document.getElementById('score').innerText = currentScore;
+      document.getElementById('max-score').innerText = totalScore;
+
+      if (song.audioBuffer) {
+        currentSource = audioCtx.createBufferSource();
+        currentSource.buffer = song.audioBuffer;
+        currentSource.connect(audioCtx.destination);
+        
+        currentSource.onended = () => {
+          if (isPlaying) gameClear();
+        };
+
+        currentSource.start(0);
+      }
+
+      gameStartTime = performance.now();
+      
+      activeNotes = song.noteData.map(n => ({
+        ...n,
+        spawned: false,
+        hit: false,
+        element: null
+      }));
+
+      window.addEventListener('keydown', handleKeyPress);
+      window.addEventListener('keyup', handleKeyUp);
+
+      requestAnimationFrame(updateGame);
+    }
+
+    // 메인 게임 프레임 업데이트
+    function updateGame(timestamp) {
+      if (!isPlaying) return;
+
+      const song = SONGS[currentSongKey];
+      const currentTime = (timestamp - gameStartTime) / 1000;
+      const speed = 500;
+      const hitWindow = 0.18;
+
+      activeNotes.forEach(note => {
+        if (note.hit) return;
+
+        const spawnLeadTime = 1.5;
+        if (!note.spawned && currentTime >= note.targetTime - spawnLeadTime) {
+          note.spawned = true;
+          const noteEl = document.createElement('div');
+          noteEl.className = 'note';
+          noteEl.style.backgroundColor = song.pointColor; // 동적 노트 색상
+          document.getElementById(`lane-${note.lane}`).appendChild(noteEl);
+          note.element = noteEl;
+        }
+
+        if (note.spawned && note.element) {
+          const block = document.getElementById(`block-${note.lane}`);
+          const laneHeight = block.offsetTop;
+          
+          const timeDiff = note.targetTime - currentTime;
+          const currentY = laneHeight - (timeDiff * speed);
+          
+          note.element.style.top = `${currentY}px`;
+
+          if (currentTime > note.targetTime + hitWindow) {
+            gameOver("노트를 놓쳤습니다!");
+            return;
+          }
+        }
+      });
+
+      if (isPlaying) {
+        requestAnimationFrame(updateGame);
+      }
+    }
+
+    // 입력 및 판정 함수
+    function setupInputEvents() {
+      const blocks = document.querySelectorAll('.key-block');
+      
+      blocks.forEach(block => {
+        const laneIndex = parseInt(block.getAttribute('data-lane'));
+
+        const handlePress = (e) => {
+          e.preventDefault();
+          if (!isPlaying) return;
+          triggerHit(laneIndex);
+        };
+
+        const handleRelease = (e) => {
+          e.preventDefault();
+          releaseBlockUI(laneIndex);
+        };
+
+        block.addEventListener('touchstart', handlePress, { passive: false });
+        block.addEventListener('touchend', handleRelease, { passive: false });
+        block.addEventListener('mousedown', handlePress);
+        block.addEventListener('mouseup', handleRelease);
+        block.addEventListener('mouseleave', handleRelease);
+      });
+    }
+
+    function handleKeyPress(e) {
+      if (!isPlaying || e.repeat) return;
+      const laneIndex = KEY_MAP[e.key];
+      if (laneIndex !== undefined) triggerHit(laneIndex);
+    }
+
+    function handleKeyUp(e) {
+      const laneIndex = KEY_MAP[e.key];
+      if (laneIndex !== undefined) releaseBlockUI(laneIndex);
+    }
+
+    function triggerHit(laneIndex) {
+      const song = SONGS[currentSongKey];
+      const block = document.getElementById(`block-${laneIndex}`);
+      if (block) {
+        block.style.backgroundColor = song.pointColor;
+        block.style.color = "#ffffff";
+        block.style.transform = "scale(0.95)";
+      }
+
+      const currentTime = (performance.now() - gameStartTime) / 1000;
+      const hitWindow = 0.18;
+
+      const targetNote = activeNotes.find(n => n.lane === laneIndex && !n.hit && n.spawned);
+
+      if (targetNote) {
+        const timeDiff = Math.abs(targetNote.targetTime - currentTime);
+
+        if (timeDiff <= hitWindow) {
+          targetNote.hit = true;
+          if (targetNote.element) targetNote.element.remove();
+
+          currentScore++;
+          document.getElementById('score').innerText = currentScore;
+        }
+      }
+    }
+
+    function releaseBlockUI(laneIndex) {
+      const song = SONGS[currentSongKey];
+      const block = document.getElementById(`block-${laneIndex}`);
+      if (block && song) {
+        block.style.backgroundColor = "#ffffff";
+        block.style.color = song.pointColor;
+        block.style.transform = "none";
+      }
+    }
+
+    // 종료 및 정단 함수
+    function gameOver(reason) {
+      isPlaying = false;
+
+      if (currentSource) {
+        try {
+          currentSource.onended = null;
+          currentSource.stop();
+        } catch (e) {}
+      }
+
+      alert(`게임 오버!\n이유: ${reason}\n최종 점수: ${currentScore} / ${totalScore}점`);
+      resetToSelectScreen();
+    }
+
+    function gameClear() {
+      isPlaying = false;
+
+      if (currentSource) {
+        try {
+          currentSource.onended = null;
+          currentSource.stop();
+        } catch (e) {}
+      }
+
+      alert(`🎉 게임 클리어!\n최종 점수: ${currentScore} / ${totalScore}점`);
+      resetToSelectScreen();
+    }
+
+    function resetToSelectScreen() {
+      activeNotes.forEach(n => {
+        if (n.element && n.element.parentNode) {
+          n.element.parentNode.removeChild(n.element);
+        }
+      });
+      activeNotes = [];
+
+      window.removeEventListener('keydown', handleKeyPress);
+      window.removeEventListener('keyup', handleKeyUp);
+
+      // 키 블럭 스타일 초기화
+      for (let i = 0; i < 4; i++) releaseBlockUI(i);
+
+      document.getElementById('play-screen').style.display = 'none';
+      document.getElementById('select-screen').style.display = 'flex';
+    }
+  </script>
+</body>
+</html>
