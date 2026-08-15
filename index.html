@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -95,8 +96,10 @@
     /* 카운트다운 레이어 */
     #countdown-overlay {
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -146,6 +149,7 @@
       position: relative;
       border-right: 1px dashed rgba(0, 0, 0, 0.1);
     }
+
     .lane:last-child {
       border-right: none;
     }
@@ -186,8 +190,10 @@
     #orientation-warning {
       display: none;
       position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       background-color: #111111;
       color: #ffffff;
       z-index: 9999;
@@ -211,6 +217,7 @@
       font-weight: bold;
       line-height: 1.4;
     }
+
     #orientation-warning .sub-warning {
       font-size: 2.5vh;
       color: #aaaaaa;
@@ -218,39 +225,56 @@
     }
 
     @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
     }
 
     /* 태블릿/모바일 (화면이 좁거나 세로 모드) 최적화 반응형 스타일 */
     @media (max-width: 1024px) {
       .game-lane-container {
-        width: 80vw !important; /* 레인 너비를 넓혀 터치 편의성 극대화 */
+        width: 80vw !important;
+        /* 레인 너비를 넓혀 터치 편의성 극대화 */
       }
+
       .main-title {
         font-size: 7vw !important;
       }
+
       .sub-title {
         font-size: 3vw !important;
       }
+
       .song-btn {
         font-size: 2.5vw !important;
         padding: 2vw 1vw !important;
       }
+
       .game-title-text {
         font-size: 3.5vw !important;
       }
+
       .score-board {
         font-size: 3vw !important;
       }
+
       .key-block {
-        bottom: 6vh !important;  /* 하단 툴바 및 홈바 영역 위로 띄워 노출 보장 */
-        bottom: 6dvh !important;
-        height: 10vh !important; /* 모바일 기기 터치 영역 최적화 */
-        height: 10dvh !important;
-        font-size: 4vh !important;
-        border-radius: 8px !important;
+        bottom: 12vh !important;
+        /* 하단 툴바 및 내비게이션 소프트키 영역 위로 안전하게 상승 */
+        bottom: 12dvh !important;
+        height: 12vh !important;
+        /* 모바일 기기 터치 영역 최적화 및 잘림 방지 */
+        height: 12dvh !important;
+        font-size: 5vh !important;
+        border-radius: 12px !important;
       }
+
       .note {
         height: 2.5vh !important;
       }
@@ -264,6 +288,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <!-- 세로 모드 감지 안내창 -->
@@ -298,10 +323,18 @@
       <div id="countdown-overlay">3</div>
 
       <div class="game-lane-container">
-        <div class="lane" id="lane-0"><div class="key-block" id="block-0" data-lane="0">Q</div></div>
-        <div class="lane" id="lane-1"><div class="key-block" id="block-1" data-lane="1">W</div></div>
-        <div class="lane" id="lane-2"><div class="key-block" id="block-2" data-lane="2">E</div></div>
-        <div class="lane" id="lane-3"><div class="key-block" id="block-3" data-lane="3">R</div></div>
+        <div class="lane" id="lane-0">
+          <div class="key-block" id="block-0" data-lane="0">Q</div>
+        </div>
+        <div class="lane" id="lane-1">
+          <div class="key-block" id="block-1" data-lane="1">W</div>
+        </div>
+        <div class="lane" id="lane-2">
+          <div class="key-block" id="block-2" data-lane="2">E</div>
+        </div>
+        <div class="lane" id="lane-3">
+          <div class="key-block" id="block-3" data-lane="3">R</div>
+        </div>
       </div>
     </div>
   </div>
@@ -350,7 +383,7 @@
 
       for (const key in SONGS) {
         const song = SONGS[key];
-        
+
         // 음원 로드
         try {
           const res = await fetch(song.audioUrl);
@@ -411,7 +444,7 @@
     // 테마 색상 및 UI 동적 변경
     function applyTheme(song) {
       document.getElementById('game-title').innerText = song.title;
-      
+
       const playScreen = document.getElementById('play-screen');
       playScreen.style.backgroundColor = song.bgColor;
 
@@ -441,7 +474,7 @@
         currentSource = audioCtx.createBufferSource();
         currentSource.buffer = song.audioBuffer;
         currentSource.connect(audioCtx.destination);
-        
+
         currentSource.onended = () => {
           if (isPlaying) gameClear();
         };
@@ -450,7 +483,7 @@
       }
 
       gameStartTime = performance.now();
-      
+
       activeNotes = song.noteData.map(n => ({
         ...n,
         spawned: false,
@@ -489,10 +522,10 @@
         if (note.spawned && note.element) {
           const block = document.getElementById(`block-${note.lane}`);
           const laneHeight = block.offsetTop;
-          
+
           const timeDiff = note.targetTime - currentTime;
           const currentY = laneHeight - (timeDiff * speed);
-          
+
           note.element.style.top = `${currentY}px`;
 
           if (currentTime > note.targetTime + hitWindow) {
@@ -510,7 +543,7 @@
     // 입력 및 판정 함수
     function setupInputEvents() {
       const blocks = document.querySelectorAll('.key-block');
-      
+
       blocks.forEach(block => {
         const laneIndex = parseInt(block.getAttribute('data-lane'));
 
@@ -589,7 +622,7 @@
         try {
           currentSource.onended = null;
           currentSource.stop();
-        } catch (e) {}
+        } catch (e) { }
       }
 
       alert(`게임 오버!\n이유: ${reason}\n최종 점수: ${currentScore} / ${totalScore}점`);
@@ -603,7 +636,7 @@
         try {
           currentSource.onended = null;
           currentSource.stop();
-        } catch (e) {}
+        } catch (e) { }
       }
 
       alert(`🎉 게임 클리어!\n최종 점수: ${currentScore} / ${totalScore}점`);
@@ -629,4 +662,5 @@
     }
   </script>
 </body>
+
 </html>
